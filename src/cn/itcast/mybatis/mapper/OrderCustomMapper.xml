@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.itcast.mybatis.mapper.OrderCustomMapper">
+	
+	<select id="findOrderUserResultType" resultType="cn.itcast.mybatis.po.OrderUserCu">
+		select 
+			o.id,o.user_id as userid ,o.number,o.createtime,o.note,
+			u.username,u.address,u.sex
+		from  
+			orders o
+		join
+			user u
+		on
+			o.user_id=u.id;
+	</select>
+	<!-- ———————————————————————————————————————————————————————————————————————————————————————————————————— -->
+	
+	
+	
+	
+	<!-- resultMap关联查询
+		type:将整个查询的结果映射到位置cn.itcast.mybatis.po.Orders
+		id:调用时的唯一标识
+	 -->
+	<resultMap type="cn.itcast.mybatis.po.Orders" id="orderuser">
+		<!-- 配置映射的订单信息 -->
+		<!-- 
+			id:就是指定查询列的唯一标识 如果有多个列就配置多个id
+			column:执行查询sql时的字段名
+			property:是pojo中的字段 
+		-->
+		<id column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="number" property="number" />
+		<result column="createtime" property="createtime" />
+		<result column="note" property="note" />
+		<!-- 配置映射的关联的用户信息 -->
+		<!-- 
+			association用于关联查询单个对象的信息 一对一;
+			property:想要关联查询的信息映射到order中的那个对象属性里;
+			javaType:这个对象属性的全路径类名;
+			id-column:执行查询sql时的字段名;
+			id-property:与user中对应的属性字段;
+			result-column:表中的字段;
+			result-property:user对象中的属性字段;
+		 -->
+		<association property="user" javaType="cn.itcast.mybatis.po.User">
+			<id column="user_id" property="id" />
+			<result column="username" property="username" />
+			<result column="address" property="address" />
+			<result column="sex" property="sex" />
+		</association>
+	</resultMap>
+	
+	<select id="findOrderUserResultMap" resultMap="orderuser">
+	select
+		o.id,o.user_id,o.number,o.createtime,o.note,
+		u.username,u.address,u.sex
+		from  
+			orders o
+		join
+			user u
+		on
+			o.user_id=u.id;
+	</select>
+	<!-- ———————————————————————————————————————————————————————————————————————————————————————————————————— -->
+	
+	<!-- 
+		extends:继承前面的resultMap所有的映射
+	 -->
+	<resultMap type="cn.itcast.mybatis.po.Orders" id="orederanddetail" extends="orderuser" >
+		<!-- 
+			collection:对关联查询到多条记录映射到集合对象中
+			property:关联查询到记录,映射到那集合当中
+			ofType:映射集合属性中pojo的类型
+		 -->
+		<collection property="orederdetaillist" ofType="cn.itcast.mybatis.po.Orderdetail">
+			<!-- 
+				column:字段查询出来的列名
+				property:映射到pojo中的那个属性中
+			 -->
+			<id column="detail_id" property="id" />
+			<result column="orders_id" property="ordersId" />
+			<result column="items_id" property="itemsId" />
+			<result column="items_num" property="itemsNum" />
+		</collection>
+	</resultMap>
+	
+	<select id="findOrderAndOrederdetailist" resultMap="orederanddetail"  >
+	select
+		o.id,o.user_id,o.number,o.createtime,o.note,
+		u.username,u.address,u.sex,
+		detail.id  detail_id,detail.orders_id,detail.items_id,detail.items_num 
+		from  
+			orders o
+		join
+			user u
+		on
+			o.user_id=u.id
+		join
+			orderdetail  detail
+		on
+			o.id=detail.orders_id
+	</select>
+	<!-- ———————————————————————————————————————————————————————————————————————————————————————————————————— -->
+	
+	<resultMap type="cn.itcast.mybatis.po.User" id="findItemsDetailAndOrder">
+		<!-- 用户信息映射 -->
+		<id column="user_id" property="id"/>
+		<result column="username" property="username" />
+		<result column="sex" property="sex" />
+		<result column="address" property="address" />
+		<!-- 用户中的订单信息 -->
+		<collection property="orderslist" ofType="cn.itcast.mybatis.po.Orders">
+			<id column="id" property="id"/>
+			<result column="user_id" property="userId" />
+			<result column="number" property="number" />
+			<result column="createtime" property="createtime" />
+			<result column="note" property="note" />
+			
+			<!-- 订单中的订单明细 -->
+			<collection property="orederdetaillist" ofType="cn.itcast.mybatis.po.Orderdetail">
+				<id column="detail_id" property="id"/>
+				<result column="orders_id" property="ordersId"/>
+				<result column="items_id" property="itemsId"/>
+				<result column="items_num" property="itemsNum"/>
+				
+				<!-- 订单明细中的商品 -->
+				<association property="items" javaType="cn.itcast.mybatis.po.Items">
+					<id column="item_id" property="id"/>
+					<result column="name" property="name"/>
+					<result column="detail" property="detail"/>
+					<result column="price" property="price"/>
+				</association>
+				
+			</collection>
+			
+		</collection>
+		
+	</resultMap>
+
+	<!-- 查询用户及商品的信息 -->
+	<select id="findItemsDetailAndOrder" resultMap="findItemsDetailAndOrder">
+		select
+			o.id,o.user_id,o.number,o.createtime,o.note,
+			u.username,u.address,u.sex,
+			detail.id  detail_id,detail.orders_id,detail.items_id,detail.items_num,
+			item.id  item_id,item.name,item.detail,item.price
+		from  
+			orders o
+		join
+			user u
+		on
+			o.user_id=u.id
+		join
+			orderdetail  detail
+		on
+			o.id=detail.orders_id
+		join
+			items  item
+		on 
+			detail.items_id=item.id
+	</select>
+	<!-- ———————————————————————————————————————————————————————————————————————————————————————————————————— -->
+
+
+	<resultMap type="cn.itcast.mybatis.po.User" id="UserMap">
+		<id column="ids" property="id"/>
+		<result column="name" property="username"/>
+		<result column="shengri" property="birthday"/>
+		<result column="xingbie" property="sex"/>
+		<result column="addr" property="address"/>
+	</resultMap>
+
+	<!-- 因为pojo与查询出的字段名相同所以不用 resultMap="UserMap" -->
+	<select id="findUserById" parameterType="int" resultType="cn.itcast.mybatis.po.User">
+		select 
+			id, username, birthday, sex, address 
+		from 
+			user 
+		where
+			id=#{value}
+	</select>
+	
+	<resultMap type="cn.itcast.mybatis.po.Orderdetail" id="detailMap">
+	 	<id column="id" property="id"/>
+	 	<result column="orders_id" property="ordersId"/>
+	 	<result column="items_id" property="itemsId"/>
+	 	<result column="items_num" property="itemsNum"/>
+	</resultMap>
+
+	<!-- 因为查询出的字段与pojo属性名不对应所以要用到 resultMap="detailMap" -->
+	<select id="oredetail" parameterType="int" resultMap="detailMap">
+		select 
+			id, orders_id, items_id,items_num
+		from 
+			orderdetail
+		 where 
+		 	id=#{id} 
+	</select>
+	
+	
+	<!-- 延迟加载的resultMap -->
+	<resultMap type="cn.itcast.mybatis.po.Orders" id="lazyLoads">
+		<!-- 对用户信息和订单明细进行延迟加载 -->
+		<id column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="number" property="number" />
+		<result column="createtime" property="createtime" />
+		<result column="note" property="note" />
+		<!-- 
+			association与collection具有延迟加载的功能
+			select:指定要与那个查询句关联也就是statement的id
+			column:那个列的字段进行关联查询
+		 -->
+		<association property="user" javaType="cn.itcast.mybatis.po.User" 
+					 select="findUserById" column="user_id">
+		<!-- 里面不用在配置字段与pojo的映射了,即使配置了也没有用处 -->
+		</association>
+		
+		<collection property="orederdetaillist" ofType="cn.itcast.mybatis.po.Orderdetail" 
+					select="oredetail" column="id">
+		<!-- 里面不用在配置字段与pojo的映射了,即使配置了也没有用处 -->
+		</collection>
+	
+	</resultMap>
+	
+	<select id="findLazyLoadOrderdetails" resultMap="lazyLoads">
+		select * from orders
+	</select>
+</mapper>
+

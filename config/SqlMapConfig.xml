@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- environments:环境 -->
+
+<!-- 以下的数据源和事务在于spring整合之后将全部废除 -->
+<configuration>
+	<properties resource="db.properties" />
+	<settings>
+		<!-- 延迟加载默认关闭,现在打开 -->
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<!-- 积极加载默认是打开的,现在改为false,也就是有需求时才加载 -->
+		<setting name="aggressiveLazyLoading" value="false"/>
+		<!-- 开启二级缓存 -->
+		<setting name="cacheEnabled" value="true"/>
+	</settings>
+	<typeAliases>
+		<package name="cn.itcast.mybatis.po" />
+		<package name="cn.itcast.mybatis.Query" />
+	</typeAliases>
+     
+	<environments default="development">
+		<environment id="development">
+			<!-- 配置JDBC事务控制,由mybatis进行管理 -->
+			<transactionManager type="JDBC"></transactionManager>
+			<!-- 配置数据源，采用dbcp连接池 -->
+			<dataSource type="POOLED">
+				<!-- 驱动管理 -->
+				<property name="driver" value="${jdbc.driver}" />
+				<!-- 接连的URL地址 -->
+				<property name="url" value="${jdbc.url}" />
+				<!-- 数据库的账号和密码 -->
+				<property name="username" value="${jdbc.username}" />
+				<property name="password" value="${jdbc.password}" />
+			</dataSource>
+			</environment>
+	</environments>
+	
+	<mappers>
+		<package name="cn.itcast.mybatis.mapper"/>
+	</mappers>
+	
+</configuration>
+

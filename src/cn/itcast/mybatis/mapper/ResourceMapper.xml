@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace用来分离Sql语句,多个业务使用同一个时就就是用namespace来分离 -->
+<mapper namespace="cn.itcast.mybatis.mapper.ResourceMapper">
+
+
+	<resultMap id="BaseResultMap" type="cn.itcast.mybatis.test.pojo.Role">
+		<id column="role_id" property="roleId" jdbcType="INTEGER" />
+		<result column="role_name" property="roleName" jdbcType="VARCHAR" />
+		<result column="remark" property="remark" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+	</resultMap>
+
+	<resultMap type="cn.itcast.mybatis.test.pojo.Role" id="RoleList">
+		<id column="role_id" property="roleId" jdbcType="INTEGER" />
+		<result column="role_name" property="roleName" jdbcType="VARCHAR" />
+		<result column="remark" property="remark" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+		<collection property="resourcelist" ofType="cn.itcast.mybatis.test.pojo.Resource">
+			<id column="menu_id" property="menuId" />
+			<result column="parent_id" property="parentId" />
+			<result column="name" property="name" />
+			<result column="url" property="url" />
+			<result column="perms" property="perms" />
+			<result column="type" property="type" />
+			<result column="icon" property="icon" />
+			<result column="order_num" property="orderNum" />
+		</collection>
+	</resultMap>
+	<select id="findAllPerss" parameterType="java.lang.Integer"
+		resultMap="RoleList">
+		select
+		distinct sys_resource.*
+		from sys_role
+		join
+		sys_role_resource
+		on
+		sys_role_resource.role_id=sys_role.role_id
+		join
+		sys_resource
+		on
+		sys_resource.menu_id=sys_role_resource.menu_id
+		where
+		sys_role.role_id in (select sys_user_role.role_id from sys_user_role where
+		sys_user_role.user_id=#{userid}) 
+		 <!-- and sys_resource.`type`=1  -->
+		order by sys_resource.order_num asc
+	</select>
+</mapper>

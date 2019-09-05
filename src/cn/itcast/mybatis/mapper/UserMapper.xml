@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace用来分离Sql语句,多个业务使用同一个时就就是用namespace来分离 -->
+<mapper namespace="cn.itcast.mybatis.mapper.UserMapper">
+
+	<!-- 开启本mapper的namespace下的二级缓存 -->
+	<cache />
+	
+	<!-- 这里面可以配置很多Sql语句 -->
+	<!-- 通过select标签来对数据进行查询 id:用于标识 映射文件中的那个sql语句,将来会把sql语句封装到mapperstatment对象中,所以将它称为statement的id; 
+		parameterType:指定输入参数的类型 resultType:指定sql输出结果所映射的java类型对象, 
+		#{}:表示占位符,如果输入的参数类型是简单类型,那么大括号中的参数可以任意,可以value或者其它名称; 
+		${}:表示拼接sql串,将接收到的参数内容不加任何修饰拼接在sql中,使用$符号可能引起sql注入; 
+		${value}:value是传入进来的参数内容,如果是简单类型,${}中只能使用value; 
+	-->
+	
+	<!--
+		Mapper代理的实现
+		statement的id与mapper.java接口中的方法名相同
+		输入参数的返回值也必须相同 
+	 -->
+	<!-- <select id="findUserById" parameterType="int" resultType="User" useCache="false"> -->
+	<select id="findUserById" parameterType="int" resultType="User" flushCache="false">
+		<!-- select * from user where id=#{id} -->
+		select id,username,birthday,sex,address from user where id=#{value}
+	</select>
+
+	<!-- 
+		1.如果是pojo包装类里面还是有对象就以对象名.属性名;
+		2.如果是pojo包装类里面直接有简单类型就直接用属性名;
+		详细请看UserQueryVo类的结构;
+	-->
+
+	<!--
+		type:resultMap最终映射的java类型,可以使用别名
+		id:对resultMap的唯一标识;在定义Sql语句时使用 
+	 -->
+	<resultMap type="User" id="UserResultMap">
+		<!-- 
+			id:是对唯一主键标识
+			colum:查询出来的列名
+			property:type指定类型中的属性名
+		 -->
+		<id column="_id" property="id"/>
+		<!--
+			result:是对普通列名标识
+			colum:查询出来的列名
+			property:type指定类型中的属性名 
+		 -->
+		<result column="_sex" property="sex"/>
+		<result column="_username" property="username"/>
+		<result column="_birthday" property="birthday"/>
+		<result column="_address" property="address"/>
+	</resultMap>
+	<!--
+		resultMap:指定定义的resultMap标签的id值,如果id值在其它mapper映射文件中前面加上namespace
+	 -->
+
+	<!--
+		id:用来标识sql片段的唯一,是被调用的标识
+		 注意:
+			1.基于单表来定义sql片段,这样的重用性高;
+			2.sql片段中不要存在where;
+	 -->
+	 <sql id="QueryUser">
+		<if test="userCustom!=null">
+			<if test=" userCustom.sex!=null and userCustom.sex!='' ">
+				and sex=#{userCustom.sex}
+			</if>
+			<if test=" username!=null and username!='' ">
+				and username like '%${username}%'
+			</if>
+		</if>
+		<if test="ids!=null">
+		<!--
+			 	我们要查询的是  select id _id, sex _sex, username _username,birthday _birthday ,address _address from user 
+			 				WHERE sex=? and ( id=? or id=? or id=? ) 
+				collection:输入对象中的集合;
+				open:起始要拼接的串;
+				close:结束要拼接的串;
+				separator:起始与结束之间的串;
+			 -->
+			<foreach collection="ids"  item="user_id"  open="and ("  separator="or" close=")">
+				<!-- 每个遍历需要的串 -->
+				id=#{user_id}
+			</foreach>
+			
+			<!-- and id in(1,10,16) -->
+			<!-- <foreach collection="ids" item="user_id" open="and id in(" separator="," close=")"> -->
+			<!-- #{user_id} -->
+			<!-- </foreach> -->
+		</if>
+	 </sql>
+
+
+	<!-- <select id="findUserVo" parameterType="UserQueryVo" resultMap="UserResultMap"> -->
+	<!-- select id _id, sex _sex, username _username,birthday _birthday ,address 
+		_address from user -->
+	<!-- refid这里是sql片段的唯一标识,如果这个sql片段不在本mapper文件中就要加上namespace -->
+	<!-- <where> -->
+	<!-- <include refid="QueryUser"/> -->
+	<!-- </where> -->
+	<!-- </select> -->
+
+
+
+	<!-- <select id="findUserCount" parameterType="UserQueryVo" resultType="int"> -->
+	<!-- select count(1) from user -->
+	<!-- <where> -->
+	<!-- 这里引用了sql片段 -->
+	<!-- <include refid="QueryUser"/> -->
+	<!-- </where> -->
+	<!-- </select> -->
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	<!-- 通过用户姓名模糊查询 -->
+	<select id="findUserByName" parameterType="java.lang.String"
+		resultType="cn.itcast.mybatis.po.User">
+		<!-- List<User> user = sqlsession.selectList("test.findUserByName", "%小明%"); -->
+		<!-- select * from user where username like #{value} -->
+
+		<!-- List<User> user = sqlsession.selectList("test.findUserByName", "小明"); -->
+		select * from user where username like '%${value}%'
+	</select>
+
+	<!-- 添加用户信息 -->
+	<!-- 如果输入的映射是pojo类型,#{}中的内容必须于pojo的属性名一致 -->
+	<insert id="insertUser" parameterType="cn.itcast.mybatis.po.User">
+		<!-- insert into user (id,username,birthday,sex,address) values(#{id},#{username},#{birthday},#{sex},#{address}) -->
+
+		<!-- 插入数据时将自增的主键id返回出去 SELECT LAST_INSERT_ID:得到刚才mysql数据库中自增的主键id,只适用于自增主键; 
+			keyProperty:将查询到的主键设置到parameterType指定对象的哪个属性;也就是User中的id属性; 
+			order:先对于insert语句来说在之后(after)执行还是之前(before)执行; 
+			resultTyp:指定返回结果的类型;
+		 -->
+		<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+			select LAST_INSERT_ID()
+		</selectKey>
+		insert into user (username,birthday,sex,address) values(#{username},#{birthday},#{sex},#{address})
+		<!-- <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.String"> -->
+		<!-- select uuid() -->
+		<!-- select 序列名.nextval()  Oracle获取自增的方法-->
+		<!-- </selectKey> -->
+		<!-- insert into user (id,username,birthday,sex,address) values(#{id},#{username},#{birthday},#{sex},#{address}) -->
+	</insert>
+	
+	<delete id="deleteById" parameterType="java.lang.Integer">
+		delete from user where id=#{id}
+	</delete>
+
+	<!-- id是从输入的参数中获取也是user中的id属性值 -->
+	<update id="updateUser" parameterType="cn.itcast.mybatis.po.User">
+		update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address}
+		where id=#{id}
+	</update>
+</mapper>

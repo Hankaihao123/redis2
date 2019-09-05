@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace用来分离Sql语句,多个业务使用同一个时就就是用namespace来分离 -->
+<mapper namespace="cn.itcast.mybatis.mapper.CityMapper">
+
+
+	<select id="findParentInfo" parameterType="java.util.Map" resultType="java.util.Map">
+		select t_city.id as id ,t_city.city_name as title ,t_city.pid from t_city where t_city.pid=#{id};
+	</select>
+
+	<select id="findSonInfo" parameterType="java.util.Map"	resultType="java.util.Map">
+		select 
+			ct2.id as id ,ct2.city_name as title ,ct2.pid 
+		from
+			 t_city as ct1
+		join
+			t_city as ct2
+		on
+			ct1.id=ct2.pid
+		where 
+			ct2.pid=#{id}
+	</select>
+</mapper>
